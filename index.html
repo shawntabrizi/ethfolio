@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html>
 <head>
     <meta charset="UTF-8">
@@ -7,13 +7,29 @@
 
 <body>
     <h1>ethfolio</h1>
-    <p>Enter your Ethereum Address:</p>
-    <input type="text" size="70" id="address" value="0x7eD1E469fCb3EE19C0366D829e291451bE638E59"/>
-    <button type="button" onclick="displayAllBalances();">Get All Balances</button>
+    <p>Enter your Ethereum Address(es):</p>
+    <div id="inputs">
+        <input type="text" size="70" class="address" value="0x7eD1E469fCb3EE19C0366D829e291451bE638E59" /><button type="button" onclick="addInput();">+</button>
+    </div>
+    <button type="button" onclick="displayAllBalances();">Get All Token Balances</button>
     <br />
+    <br />
+    <div id="submission">
+        <input type="checkbox" id="saveTotal" onclick="checkAddress();"/>
+        <label for="saveTotal">Store Total USD Value? </label>
+        <input type="checkbox" id="saveAddress" disabled/>
+        <label for="saveAddress">Store All Addresses? </label>
+        <button type="button" onclick="submitToForm();">Save & Share</button>
+    </div>
+    <br />
+    <div class="chart-container" style="position: relative; height:40vh; width:80vw">
+        <canvas id="chart"></canvas>
+    </div>
     <br />
     <div id="output"></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+<script src="https://codepen.io/anon/pen/aWapBE.js"></script>
 <script src="ethfolio.js"></script>
 </body>
 
