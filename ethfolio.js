@@ -127,8 +127,13 @@ function percentageOfTotal(tokens, total) {
 }
 
 function addInput() {
-    var input = '<br><input type="text" size="70" class="address" />';
-    document.getElementById('inputs').innerHTML += input;
+    var br = document.createElement("br")
+    var input = document.createElement("input")
+    input.setAttribute("type", "text")
+    input.setAttribute("size", "70")
+    input.setAttribute("class", "address")
+    document.getElementById('inputs').appendChild(br);
+    document.getElementById('inputs').appendChild(input)
 }
 
 async function displayAllBalances() {
