@@ -1,37 +1,84 @@
-﻿<!DOCTYPE html>
-<html>
+<!doctype html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
     <title>ethfolio</title>
+    <link rel="icon" href="icon-32.png" type="image/png" sizes="32x32">
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
 </head>
-
 <body>
-    <h1>ethfolio</h1>
-    <p>Enter your Ethereum Address(es):</p>
-    <div id="inputs">
-        <input type="text" size="70" class="address" value="0x7eD1E469fCb3EE19C0366D829e291451bE638E59" /><button type="button" onclick="addInput();">+</button>
-    </div>
-    <button type="button" onclick="calculateAllBalances();">Get All Token Balances</button>
-    <br />
-    <br />
-    <div id="submission">
-        <input type="checkbox" id="saveTotal" onclick="checkAddress();"/>
-        <label for="saveTotal">Store Total USD Value? </label>
-        <input type="checkbox" id="saveAddress" disabled/>
-        <label for="saveAddress">Store All Addresses? </label>
-        <button type="button" onclick="submitToForm();">Save & Share</button>
-        <button type="button" onclick="getRow(8);">Get Row</button>
-    </div>
-    <br />
-    <div class="chart-container" style="position: relative; height:40vh; width:80vw">
-        <canvas id="chart"></canvas>
-    </div>
-    <br />
-    <div id="output"></div>
+    <div class="container-fluid">
+        <div class="jumbotron" style="padding-bottom: 1em;">
+            <h1 class="display-3" style="white-space: nowrap;">ethfoli<img src="icon-lg.png" style="height: .6em;" alt="o" /></h1>
+            <p class="lead">This is a simple and safe application to collect and share your Ethereum token porfolio.</p>
+            <hr class="my-4">
+            <div id="inputs">
+                <div class="input-group">
+                    <input type="text" class="address form-control" value="0x7eD1E469fCb3EE19C0366D829e291451bE638E59" />
+                    <span class="input-group-btn">
+                        <button class="btn btn-secondary" type="button" onclick="addInput();" data-toggle="tooltip" data-placement="bottom" title="Add another address!">+</button>
+                    </span>
+                </div>
+            </div>
+            <p class="lead">
+                <a class="btn btn-primary btn-sm" href="#" role="button" onclick="calculateAllBalances();">Calculate Portfolio</a>
+            </p>
+            <div id="submission" style="display:none;">
+                <div class="row">
+                    <div class="col">
+                        <div class="alert alert-info" role="alert">
+                            <div class="form-check form-check-inline">
+                                <label class="form-check-label">
+                                    <input class="form-check-input" type="checkbox" id="saveTotal" onclick="checkAddress();" /> Store Total USD Value?
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <label class="form-check-label">
+                                    <input class="form-check-input" type="checkbox" id="saveAddress" /> Store All Addresses?
+                                </label>
+                            </div>
+                            <a class="btn btn-info btn-sm" href="#" role="button" onclick="submitToForm();">Save & Share</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
-<script src="https://codepen.io/anon/pen/aWapBE.js"></script>
-<script src="ethfolio.js"></script>
+        </div>
+            <div id="shareLink">
+
+            </div>
+        
+        <div id="chartArea" style="display:none;">
+            <div class="row">
+                <div class="col">
+                    <div class="panel panel-default">
+                        <div class="panel-body">
+                            <div class="chart-container" style="height: 55vh;">
+                                <canvas id="chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col" id="output">
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
+    <script src="https://codepen.io/anon/pen/aWapBE.js"></script>
+    <script src="ethfolio.js"></script>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
 </body>
-
-</html> 
+</html>
