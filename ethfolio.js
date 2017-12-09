@@ -24,7 +24,67 @@ function tokenConstructor(symbol, balance, price, name, percentage) {
     this.percentage = percentage;
 }
 
-async function getAllBalances(addresses) {
+async function getBTCBalances(addresses) {
+    try {
+
+        var btctoken = new tokenConstructor()
+        btctoken.symbol = "BTC"
+        btctoken.name = "Bitcoin"
+        btctoken.price = (await getPrice('BTC')).toString()
+        btctoken.balance = 0
+
+        var addressesBar = ""
+        for (address in addresses) {
+            addressesBar += addresses[address] + "|"
+        }
+        var response = await fetch("https://blockchain.info/balance?cors=true&active=" + addressesBar)
+        var data = await response.json()
+
+        for (item in data) {
+            btctoken.balance += data[item].final_balance / (Math.pow(10, 8))
+        }
+
+        console.log(btctoken.balance)
+
+        return btctoken
+
+    } catch (error) {
+        console.log(error)
+        throw (error)
+    }
+}
+
+async function getLTCBalances(addresses) {
+    try {
+
+        var ltctoken = new tokenConstructor()
+        ltctoken.symbol = "LTC"
+        ltctoken.name = "Litecoin"
+        ltctoken.price = (await getPrice('LTC')).toString()
+        ltctoken.balance = 0
+
+        var data = await Promise.all(
+            addresses.map(
+                address =>
+                    fetch("https://api.blockcypher.com/v1/ltc/main/addrs/" + address + "/balance").then(
+                        (response) => response.json()
+                    )));
+
+        for (item in data) {
+            ltctoken.balance += data[item].final_balance / (Math.pow(10, 8))
+        }
+
+        console.log(ltctoken.balance)
+
+        return ltctoken
+
+    } catch (error) {
+        console.log(error)
+        throw (error)
+    }
+}
+
+async function getETHBalances(addresses) {
     try {
         var data = await Promise.all(
             addresses.map(
@@ -42,8 +102,8 @@ async function getAllBalances(addresses) {
     }
 }
 
-async function getETHPrice() {
-    var response = await fetch("https://min-api.cryptocompare.com/data/price?fsym=ETH&tsyms=USD")
+async function getPrice(coin) {
+    var response = await fetch('https://min-api.cryptocompare.com/data/price?fsym=' + coin + '&tsyms=USD')
     var price = await response.json()
     return price['USD']
 }
@@ -82,7 +142,7 @@ async function collectTokens(balances) {
     ethObj.balance = tokenTracker['ETH']
     ethObj.symbol = "ETH"
     ethObj.name = "Ether"
-    ethObj.price = await getETHPrice()
+    ethObj.price = (await getPrice('ETH')).toString()
     tokens.push(ethObj)
 
     for (tok in tokens) {
@@ -108,8 +168,6 @@ function compareTotal(a, b) {
     aTotal = a.price * a.balance
     bTotal = b.price * b.balance
 
-    console.log("sorting")
-
     if (aTotal < bTotal) {
         return 1;
     }
@@ -117,6 +175,45 @@ function compareTotal(a, b) {
         return -1;
     }
     return 0;
+}
+
+
+
+//Check address type
+document.getElementById("inputs").addEventListener('keyup', function (event) {
+    if (event.target.tagName.toLowerCase() === 'input') {
+        var addressType = discoverAddressType(event.target.value)
+        if (event.target.nextElementSibling.tagName.toLowerCase() === 'span')
+        {
+            event.target.nextElementSibling.innerHTML = addressType
+            if (addressType == 'BTC') {
+                event.target.nextElementSibling.setAttribute("class", "input-group-addon bg-warning token-label")
+            } else if (addressType == 'LTC') {
+                event.target.nextElementSibling.setAttribute("class", "input-group-addon bg-info text-white token-label")
+            } else if (addressType == 'ETH') {
+                event.target.nextElementSibling.setAttribute("class", "input-group-addon bg-dark text-white token-label")
+            } else {
+                event.target.nextElementSibling.setAttribute("class", "input-group-addon token-label-2")
+            }
+        }
+        
+    }
+})
+
+function discoverAddressType(address) {
+
+    if (/^(0x)?[0-9a-f]{40}$/i.test(address)) {
+        //ETH
+        return 'ETH';
+    } else if (/^[13][a-km-zA-HJ-NP-Z1-9]{25,34}$/.test(address)) {
+        //BTC
+        return 'BTC';
+    } else if (/^L[a-zA-Z0-9]{26,33}$/.test(address)) {
+        //LTC
+        return 'LTC';
+    } else {
+        return '?'
+    }
 }
 
 function percentageOfTotal(tokens, total) {
@@ -131,31 +228,67 @@ function showSubmission() {
 }
 
 function addInput() {
+    var inputGroup = document.createElement("div")
+    inputGroup.setAttribute("class", "input-group address")
     var input = document.createElement("input")
     input.setAttribute("type", "text")
-    input.setAttribute("class", "address form-control")
-    document.getElementById('inputs').appendChild(input)
+    input.setAttribute("class", "form-control")
+    var span = document.createElement("span")
+    span.setAttribute("class", "input-group-addon token-label-2")
+
+    inputGroup.appendChild(input)
+    inputGroup.appendChild(span)
+
+    document.getElementById('inputs').appendChild(inputGroup)
+}
+
+function collectAddresses(addresses) {
+
+    var output = {}
+    var inputgroups = document.getElementsByClassName("address");
+
+    for (let i = 0; i < inputgroups.length; i++) {
+        var address = inputgroups[i].getElementsByTagName('input')[0].value
+        var addressType = inputgroups[i].getElementsByTagName('span')[0].innerHTML
+
+        if (typeof address !== "undefined" && address !== "" && addressType !== '?' && addressType !== '') {
+            if (!output[addressType]) {
+                output[addressType] = []
+            }
+            output[addressType].push(address)
+        }
+    }
+
+    console.log(output)
+
+    return output
+}
+
+function addBTCandLTC(balances, btc, ltc) {
+
 }
 
 async function calculateAllBalances(addresses = [], newAddress = true) {
     try {
-        if (addresses.length == 0) {
-            var inputs = document.getElementsByClassName("address");
 
-            for (input in inputs) {
-                if (typeof inputs[input].value !== "undefined" && inputs[input].value !== "") {
-                    addresses.push(inputs[input].value)
-                }
-            }
+        if (addresses.length == 0) {
+            var addresses = collectAddresses(addresses)
+            var tokens = []
         }
 
-        console.log(addresses)
+        if (addresses.ETH) {
+            var balances = await getETHBalances(addresses.ETH)
+            tokens = await collectTokens(balances)
+        }
 
-        var balances = await getAllBalances(addresses)
+        console.log(tokens)
+        if (addresses.BTC) {
+            tokens.push(await getBTCBalances(addresses.BTC))
+        }
 
-        document.getElementById("output").innerHTML = ""
-
-        var tokens = await collectTokens(balances)
+        if (addresses.LTC) {
+            tokens.push(await getLTCBalances(addresses.LTC))
+        }
 
         tokens.sort(compareTotal)
 
@@ -165,14 +298,11 @@ async function calculateAllBalances(addresses = [], newAddress = true) {
 
         percentageOfTotal(tokens, total)
 
-        console.log(tokens)
 
         for (symbol in tokens) {
             token = tokens[symbol]
             output.push([token.symbol, (token.percentage).toPrecision(4)])
         }
-
-        console.log(tokens, addresses, total, output)
 
         global.tokens = JSON.stringify(tokens)
         global.accounts = JSON.stringify(addresses)
@@ -191,20 +321,21 @@ async function calculateAllBalances(addresses = [], newAddress = true) {
 }
 
 function displayAllBalances(outputJSON, totalJSON, accountsJSON) {
+    document.getElementById("output").innerHTML = ""
 
     var output = JSON.parse(outputJSON)
     if (totalJSON) {
         var total = JSON.parse(totalJSON)
-        total = "$" + total.toFixed(2)
-    } else {
-        var total = "HIDDEN"
+        if (parseFloat(total) < 1000) {
+            total = '$' + parseFloat(total).toLocaleString(undefined, { maximumFractionDigits: 2 })
+        } else {
+            total = '$' + parseFloat(total).toLocaleString(undefined, { maximumFractionDigits: 0 })
+        }
     }
+
     if (accountsJSON) {
         var accounts = JSON.parse(accountsJSON)
     }
-
-
-    document.getElementById("output").innerHTML += "<h3>Total Price USD: " + total + "</h3>"
 
     document.getElementById("output").innerHTML += "<b>Accounts: </b><br>"
     for (account in accounts) {
@@ -248,14 +379,12 @@ function displayAllBalances(outputJSON, totalJSON, accountsJSON) {
 
     document.getElementById("output").innerHTML = table
 
-    console.log(other[1])
-
     if (other[1] > 0) {
         view.push(other)
     }
 
 
-    createGraph(view);
+    createGraph(view, total);
 
 }
 
@@ -281,7 +410,7 @@ function createLegend (chart) {
 }
 
 
-function createGraph(input) {
+function createGraph(input, total) {
 
     document.getElementById("chartArea").style.display = "unset"
 
@@ -289,7 +418,7 @@ function createGraph(input) {
     var labels = []
 
     for (tok in input) {
-        datasets.push(input[tok][1])
+        datasets.push((input[tok][1] * 100).toPrecision(4))
         labels.push(input[tok][0])
     }
 
@@ -304,10 +433,17 @@ function createGraph(input) {
         labels: labels
     };
 
-    var usdtext = '$' + parseFloat(global.totalUsd).toLocaleString(undefined, { maximumFractionDigits: 2 })
+    if (!total) {
+        total = ""
+    }
 
     var ctx = document.getElementById("chart").getContext('2d');
-    var myDoughnutChart = new Chart(ctx, {
+
+    if (window.myDoughnutChart) {
+        window.myDoughnutChart.destroy();
+    }
+
+    window.myDoughnutChart = new Chart(ctx, {
         type: 'doughnut',
         data: data,
         options: {
@@ -317,11 +453,19 @@ function createGraph(input) {
             legend: {
                 display: false
             },
+            tooltips: {
+                mode: 'label',
+                callbacks: {
+                    label: function (tooltipItem, data) {
+                        return data.labels[tooltipItem.index] + ': ' + data['datasets'][0]['data'][tooltipItem.index] + '%';
+                    }
+                }
+            },
             maintainAspectRatio: false,
             responsive: true,
             elements: {
                 center: {
-                    text: usdtext,
+                    text: total,
                     fontStyle: 'Helvetica',
                     sidePadding: 15
                 }
@@ -467,8 +611,6 @@ async function getRow(rowNumber) {
         var sheet = await getSheetRange(range)
 
         var values = sheet.values[0]
-
-        console.log(values)
 
         if (values.length >= 2 && values.length < 5) {
             var time = values[0]

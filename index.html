@@ -1,7 +1,7 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
 <head>
-    <title>ethfolio</title>
+    <title>ethfol.io</title>
     <link rel="icon" href="icon-32.png" type="image/png" sizes="32x32">
     <!-- Required meta tags -->
     <meta charset="utf-8">
@@ -9,25 +9,26 @@
 
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="ethfolio.css" />
 </head>
 <body>
     <div class="container-fluid">
-        <div class="jumbotron" style="padding-bottom: 1em;">
-            <h1 class="display-3" style="white-space: nowrap;">ethfoli<img src="icon-lg.png" style="height: .6em;" alt="o" /></h1>
-            <p class="lead">This is a simple and safe application to collect and share your Ethereum token porfolio.</p>
+        <div class="jumbotron">
+            <h1 class="display-3"><a href="http://ethfol.io" class="banner">ethfol.i<img src="icon-lg.png" class="banner-o" alt="o" /></a></h1>
+            <p class="lead">A simple and safe application to calculate and share your Ethereum token portfolio.</p>
             <hr class="my-4">
             <div id="inputs">
-                <div class="input-group">
-                    <input type="text" class="address form-control" value="0x7eD1E469fCb3EE19C0366D829e291451bE638E59" />
-                    <span class="input-group-btn">
-                        <button class="btn btn-secondary" type="button" onclick="addInput();" data-toggle="tooltip" data-placement="bottom" title="Add another address!">+</button>
-                    </span>
+                <div class="input-group address">
+                    <input type="text" class="form-control" value="0x7eD1E469fCb3EE19C0366D829e291451bE638E59" />
+                    <span class="input-group-addon bg-dark text-white token-label">ETH</span>
                 </div>
             </div>
             <p class="lead">
-                <a class="btn btn-primary btn-sm" href="#" role="button" onclick="calculateAllBalances();">Calculate Portfolio</a>
+                <a class="btn btn-secondary btn-sm" role="button" onclick="addInput();">Add another address</a>
+                <a class="btn btn-primary btn-sm" role="button" onclick="calculateAllBalances();">Calculate Portfolio</a>
             </p>
-            <div id="submission" style="display:none;">
+            <div id="submission" class="submission">
                 <div class="row">
                     <div class="col">
                         <div class="alert alert-info" role="alert">
@@ -41,7 +42,7 @@
                                     <input class="form-check-input" type="checkbox" id="saveAddress" /> Store All Addresses?
                                 </label>
                             </div>
-                            <a class="btn btn-info btn-sm" href="#" role="button" onclick="submitToForm();">Save & Share</a>
+                            <a class="btn btn-info btn-sm" role="button" onclick="submitToForm();">Save & Share</a>
                         </div>
                     </div>
                 </div>
@@ -52,12 +53,12 @@
 
             </div>
         
-        <div id="chartArea" style="display:none;">
+        <div id="chartArea" class="chartArea">
             <div class="row">
                 <div class="col">
                     <div class="panel panel-default">
                         <div class="panel-body">
-                            <div class="chart-container" style="height: 55vh;">
+                            <div class="chart-container">
                                 <canvas id="chart"></canvas>
                             </div>
                         </div>
@@ -69,14 +70,20 @@
             <div class="col" id="output">
             </div>
         </div>
-
     </div>
 
-    <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <footer class="footer fixed-bottom">
+        <div class="container">
+            <span class="text-muted"><a href="http://ethfol.io/">ethfolio</a> &copy; - Created by <a href="http://shawntabrizi.com/">Shawn Tabrizi</a> - Powered by <a href="https://ethplorer.io/">Ethplorer.io</a> and <a href="https://www.cryptocompare.com/">CryptoCompare</a> - Using <a href="http://www.chartjs.org/">Chart.js</a> and Google <a href="https://www.google.com/forms/about/">Forms</a> + <a href="https://www.google.com/sheets/about/">Sheets</a> - Source on <a href="https://github.com/shawntabrizi/ethfolio">GitHub</a></span>
+        </div>
+    </footer>
+
+    <!-- Custom JavaScript -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.1/Chart.min.js"></script>
     <script src="https://codepen.io/anon/pen/aWapBE.js"></script>
+    <script src="eth.js"></script>
     <script src="ethfolio.js"></script>
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
