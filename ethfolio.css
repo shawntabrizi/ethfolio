@@ -40,9 +40,16 @@ body {
 }
 
 .token-label {
-    width: 4em;
+    width: 6em;
+    text-transform: uppercase;
+    text-align:center;
 }
 
 .token-label-2 {
     width: 2em;
+}
+
+.col-color {
+    width: 1em;
+    padding: 0!important;
 }
