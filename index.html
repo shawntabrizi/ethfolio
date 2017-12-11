@@ -16,7 +16,7 @@
     <div class="container-fluid">
         <div class="jumbotron">
             <h1 class="display-3"><a href="http://ethfol.io" class="banner">ethfol.i<img src="icon-lg.png" class="banner-o" alt="o" /></a></h1>
-            <p class="lead">A simple and safe application to calculate and share your Ethereum token portfolio.</p>
+            <p class="lead">Share your cryptocurrency portfolio, without sharing your personal information.</p>
             <hr class="my-4">
             <div id="inputs">
             </div>
@@ -65,9 +65,83 @@
         </div>
         <div class="row">
             <div class="col" id="output">
-                <div class="container">
+                <div class="container-fluid">
                     <div class="row">
-
+                        <div class="col-md-4">
+                            <h2>Import.</h2>
+                            <p>You can easily load your token portfolio by importing an Ethereum, Bitcoin, or Litecoin <b>wallet address</b>. When you import your Ethereum address, we automatically discover all of your various Ethereum tokens.</p>
+                            <p>If you need to add other tokens to your portfolio, you can <b>add a custom token</b>.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h2>Save.</h2>
+                            <p><b>Privacy</b> is of primary importance to us. By default, you only save the relative percentage of each token in your portfolio. This means that no one will ever know exactly how much you own, or what your wallet addresses are.</p>
+                            <p>This site runs entirely on the <b>client-side</b>, so you control what you want to share.</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h2>Share.</h2>
+                            <p>Once you save your portfolio, we give you a link which you can share with your friends.</p>
+                            <p>If you chose to <b>save your total USD value</b>, we will show people how much your total portfolio is worth.</p>
+                            <p>If you chose to <b>save your addresses</b>, we will automatically update your entire portfolio as it changes.</p>
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <img src="image-1.png" class="img-responsive img-thumbnail" />
+                        </div>
+                        <div class="col-md-9">
+                            <h3>Keeping it simple.</h3>
+                            <p>Our goal is not only to make it simple to create your portfolio, but make it easy to share it too.</p>
+                            <p>Take a look at these example portfolios to see what sharing looks like. Note that these all represent the same token portfolio using the different save settings.</p>
+                            <ul>
+                                <li><b>Default save settings (no personal data):</b> <a href="http://ethfol.io/?row=2">http://ethfol.io/?row=2</a></li>
+                                <li><b>Save total value:</b> <a href="http://ethfol.io/?row=3">http://ethfol.io/?row=3</a></li>
+                                <li><b>Save all addresses and custom token values:</b> <a href="http://ethfol.io/?row=4">http://ethfol.io/?row=4</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <img src="image-2.png" class="img-responsive img-thumbnail" />
+                        </div>
+                        <div class="col-md-9">
+                            <h3>We support ETH, BTC, and LTC wallets.</h3>
+                            <p>You only need to copy and paste your Ethereum, Bitcoin, or Litecoin wallet address to be able to get all of your token information.</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <img src="image-3.png" class="img-responsive img-thumbnail" />
+                        </div>
+                        <div class="col-md-9">
+                            <h3>You can add any number of custom tokens.</h3>
+                            <p>Using the <a href="https://www.cryptocompare.com/">CryptoCompare</a> price API, we are able to bring you access to hundreds of tokens which you can easily add to your portfolio. You just add the <b>#</b> of tokens you own, and we will calculate the total value.</p>
+                            <p>If your token is not supported by the CryptoCompare API, you can just use the dropdown to enter a <b>$</b> value for your tokens, and we will seamlessly add it to your portfolio.</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                            <img src="image-4.png" class="img-responsive img-thumbnail" />
+                        </div>
+                        <div class="col-md-9">
+                            <h3>Quickly check your wallets without sharing anything.</h3>
+                            <p>With the <code>?a=</code> query string, you can create a URL with your different ETH, BTC, and LTC addresses separated by a comma (<code>,</code>). When you visit that link, your addresses will automatically get populated in the portfolio view.</p>
+                            <p>Take a look at this example: <a style="word-wrap: break-word;" href="http://ethfol.io?a=0x7eD1E469fCb3EE19C0366D829e291451bE638E59,LSFz3wyoFcqW2TKPCcj9gao4zPPuS3wUTS,1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX">http://ethfol.io?a=0x7eD1E469fCb3EE19C0366D829e291451bE638E59,LSFz3wyoFcqW2TKPCcj9gao4zPPuS3wUTS,1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX</a></p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-3">
+                        </div>
+                        <div class="col-md-9">
+                            <h3>Find bugs? Have suggestions? Wanna say thanks?</h3>
+                            <p>I would love any and all comments and criticisms for this project. Feel free to point out issues on <a href="https://github.com/shawntabrizi/ethfolio">GitHub</a>, or send me feedback directly via <a href="mailto:shawntabrizi@gmail.com?Subject=ethfol.io%20Feedback">e-mail</a>.</p>
+                            <p>If you think this project is extra cool and want to say thanks, feel free to send me some fake money at:</p>
+                            <ul>
+                                <li>ETH: <code>0xD62835Fe2B40C8411A10E7980a290270e6A23cDA</code></li>
+                                <li>BTC: <code>3QQJLmgMJdWDThvWpbvmrKH9WVJyBM9TZy</code></li>
+                            </ul>
+                            <p>Look at <a href="http://ethfol.io?a=0xD62835Fe2B40C8411A10E7980a290270e6A23cDA,3QQJLmgMJdWDThvWpbvmrKH9WVJyBM9TZy">my sad portfolio</a> :(</p>
+                        </div>
                     </div>
                 </div>
             </div>

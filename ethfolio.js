@@ -214,9 +214,14 @@ function discoverAddressType(address) {
 }
 
 function percentageOfTotal(tokens, total) {
+
     for (tok in tokens) {
         token = tokens[tok]
-        token.percentage = token.total / total
+        if (total > 0) {
+            token.percentage = token.total / total
+        } else {
+            token.percentage = 0
+        }
     }
 }
 
@@ -240,7 +245,7 @@ function addInput(value) {
         input.setAttribute("value", value)
         setAddressType(input)
     }
-    
+
 
     document.getElementById('inputs').appendChild(inputGroup)
 }
@@ -259,7 +264,7 @@ async function addCustomToken(customToken) {
         var value = customToken[1]
         var symbol = customToken[2]
     }
-    
+
 
     var inputGroup = document.createElement("div")
     inputGroup.setAttribute("class", "input-group custom-token")
@@ -321,7 +326,7 @@ async function addCustomToken(customToken) {
         dropdown.value = type;
     }
     if (value) {
-        input.value =  value;
+        input.value = value;
     }
     if (symbol) {
         sym.value = symbol;
@@ -349,7 +354,7 @@ function collectAddresses(addresses) {
     var inputgroups = document.getElementsByClassName("address");
 
     //looping backwards because we are removing elements at the same time
-    for (let i = inputgroups.length-1; i >= 0; i--) {
+    for (let i = inputgroups.length - 1; i >= 0; i--) {
         var address = inputgroups[i].getElementsByTagName('input')[0].value
         var addressType = inputgroups[i].getElementsByTagName('span')[0].innerHTML
 
@@ -376,12 +381,12 @@ function storeCustomTokens() {
 
     var inputgroups = document.getElementsByClassName("custom-token");
 
-    for (let i = 0; i < inputgroups.length; i ++) {
+    for (let i = 0; i < inputgroups.length; i++) {
         var type = inputgroups[i].getElementsByClassName("custom-type")[0].value
         var value = inputgroups[i].getElementsByTagName("input")[0].value
         var sym = inputgroups[i].getElementsByClassName("token-label")[0].value
 
-        output.push([type,value,sym])
+        output.push([type, value, sym])
 
     }
 
@@ -436,6 +441,10 @@ function consolidateTokens(tokens) {
             token.total = token.price * token.balance
         }
 
+        if (isNaN(token.total)) {
+            token.total = 0;
+        }
+
         if (token.symbol in tokenTracker) {
             console.log("Consolidating: " + token.symbol)
             tokenTracker[token.symbol].total += token.total;
@@ -481,11 +490,7 @@ async function calculateAllBalances(newAddress = true) {
             tokens = tokens.concat(customTokens)
         }
 
-        console.log(tokens)
-
         tokens = consolidateTokens(tokens)
-
-        console.log(tokens)
 
         //find total value of all tokens, also calculate total per token
         var total = totalPrice(tokens)
@@ -530,6 +535,8 @@ function displayAllBalances(outputJSON, totalJSON) {
     document.getElementById("output").innerHTML = ""
 
     var output = JSON.parse(outputJSON)
+    var totalString = ""
+
     if (totalJSON) {
         var total = JSON.parse(totalJSON)
         //if you have more than $1000, who cares about cents?
@@ -798,15 +805,13 @@ function getParameterByName(name, url) {
 }
 
 //call the google sheets api
-async function getSheetRange(range)
-{
+async function getSheetRange(range) {
     extra = "P2tleT1BSXphU3lDSlVham9"
     extra += "XdWI0aElBdzM3dUZUaWZBMFB2emI3V2dtQ28"
 
     var response = await fetch("https://sheets.googleapis.com/v4/spreadsheets/1EVToo4kogqGNrQ-lLgl9iXJ4759p5PCbI0HxhqCCQek/values/" + range + atob(extra + "="))
     var sheet = await response.json()
 
-    console.log(sheet)
     return sheet
 }
 
@@ -841,7 +846,6 @@ async function getRow(rowNumber) {
                 console.log('recalculating')
                 setAddresses(JSON.parse(addresses))
                 if (customTokens) {
-                    console.log("Trying to do custom tokens")
                     setCustomTokens(JSON.parse(customTokens))
                 }
                 calculateAllBalances(false)
