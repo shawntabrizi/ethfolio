@@ -53,3 +53,7 @@ body {
     width: 1em;
     padding: 0!important;
 }
+
+.walkthrough {
+    display: none;
+}

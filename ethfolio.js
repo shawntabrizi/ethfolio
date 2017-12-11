@@ -411,13 +411,17 @@ async function collectCustomTokens() {
             if (type == 'dollar') {
                 token.symbol = sym
                 token.total = parseFloat(value)
-                if (global.cryptoCompareTokens[sym]) {
-                    token.name = global.cryptoCompareTokens[sym]['CoinName']
+                if (global.cryptoCompareTokens) {
+                    if (global.cryptoCompareTokens[sym]) {
+                        token.name = global.cryptoCompareTokens[sym]['CoinName']
+                    }
                 }
             } else if (type == 'number') {
                 token.symbol = sym
-                if (global.cryptoCompareTokens[sym]) {
-                    token.name = global.cryptoCompareTokens[sym]['CoinName']
+                if (global.cryptoCompareTokens) {
+                    if (global.cryptoCompareTokens[sym]) {
+                        token.name = global.cryptoCompareTokens[sym]['CoinName']
+                    }
                 }
                 token.balance = parseFloat(value)
                 token.price = await getPrice(sym)
@@ -895,7 +899,7 @@ function setAddresses(addresses, depth = 2) {
 
 window.onload = async function () {
     //Get a ton of token metadata
-    global.cryptoCompareTokens = await fetchCustomTokens();
+    //global.cryptoCompareTokens = await fetchCustomTokens();
     //check for 'row' querystring
     var row = getParameterByName('row')
     //check for 'a' querystring
@@ -903,15 +907,17 @@ window.onload = async function () {
     if (row) {
         if (row > 1) {
             console.log("Getting Row " + row)
+            document.getElementById("output").innerHTML = "<h2 class='text-center'>Loading portfolio...</h2>"
             getRow(row)
         } else {
             document.getElementById("output").innerHTML = "Not a valid row"
         }
-    }
-
-    if (a) {
+    } else if (a) {
         var addresses = a.split(',')
+        document.getElementById("output").innerHTML = "<h2 class='text-center'>Loading portfolio...</h2>"
         setAddresses(addresses, 1)
         calculateAllBalances(false)
+    } else {
+        document.getElementsByClassName("walkthrough")[0].style.display = "unset"
     }
 }
