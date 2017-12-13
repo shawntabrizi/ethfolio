@@ -136,12 +136,14 @@ async function collectTokens(balances) {
         }
 
         //eth itself is in a different layer of the returned json
-        let ethObj = new tokenConstructor()
-        ethObj.balance = balances[balance]['ETH']['balance']
-        ethObj.symbol = "ETH"
-        ethObj.name = "Ether"
-        ethObj.price = (await getPrice('ETH')).toString()
-        tokens.push(ethObj)
+        if (balances[balance]['ETH']['balance'] > 0) {
+            let ethObj = new tokenConstructor()
+            ethObj.balance = balances[balance]['ETH']['balance']
+            ethObj.symbol = "ETH"
+            ethObj.name = "Ether"
+            ethObj.price = (await getPrice('ETH')).toString()
+            tokens.push(ethObj)
+        }
     }
 
     return tokens
@@ -176,6 +178,8 @@ function compareTotal(a, b) {
 
 //Check address type
 document.getElementById("inputs").addEventListener('input', function (event) {
+    document.getElementById("submission").style.display = "none"
+    document.getElementById("shareLink").innerHTML = ""
     if (event.target.classList.contains('address-input')) {
         setAddressType(event.target)
     }
@@ -227,14 +231,21 @@ function percentageOfTotal(tokens, total) {
 
 function showSubmission() {
     document.getElementById("submission").style.display = "unset"
+    var saveText = document.getElementById("saveText")
+    saveText.innerText = ""
+    saveText.setAttribute("class", "")
 }
 
-function addInput(value) {
+function addInput(value, disabled = false) {
     var inputGroup = document.createElement("div")
     inputGroup.setAttribute("class", "input-group address")
     var input = document.createElement("input")
     input.setAttribute("type", "text")
     input.setAttribute("class", "form-control address-input")
+    input.setAttribute("placeholder", "ETH, BTC, or LTC Address")
+    if (disabled) {
+        input.disabled = true;
+    }
 
     var span = document.createElement("span")
     span.setAttribute("class", "input-group-addon token-label-2")
@@ -257,7 +268,7 @@ async function fetchCustomTokens() {
     return data['Data']
 }
 
-async function addCustomToken(customToken) {
+async function addCustomToken(customToken, disabled = false) {
 
     if (customToken) {
         var type = customToken[0]
@@ -284,6 +295,7 @@ async function addCustomToken(customToken) {
     var input = document.createElement("input")
     input.setAttribute("type", "text")
     input.setAttribute("class", "form-control")
+    input.setAttribute("placeholder", "# or total $ of token")
 
 
     // This code makes a drop down list of all the tokens available on CryptoCompare
@@ -316,7 +328,13 @@ async function addCustomToken(customToken) {
     var sym = document.createElement("input")
     sym.setAttribute("class", "input-group-addon token-label")
     sym.setAttribute("type", "text")
-    sym.value = "SYM"
+    sym.setAttribute("placeholder", "SYM")
+
+    if (disabled) {
+        dropdown.disabled = true;
+        input.disabled = true;
+        sym.disabled = true;
+    }
 
     inputGroup.appendChild(dropdown)
     inputGroup.appendChild(input)
@@ -386,7 +404,10 @@ function storeCustomTokens() {
         var value = inputgroups[i].getElementsByTagName("input")[0].value
         var sym = inputgroups[i].getElementsByClassName("token-label")[0].value
 
-        output.push([type, value, sym])
+        if (value != "" && sym != "") {
+            sym = sym.toUpperCase();
+            output.push([type, value, sym])
+        }
 
     }
 
@@ -404,7 +425,8 @@ async function collectCustomTokens() {
         var value = inputgroups[i].getElementsByClassName("form-control")[0].value
         var sym = inputgroups[i].getElementsByClassName("token-label")[0].value
 
-        if (type && value && sym) {
+        if (value != "" && sym != "") {
+            sym = sym.toUpperCase();
 
             var token = new tokenConstructor()
 
@@ -733,67 +755,76 @@ Chart.pluginService.register({
 
 //submit data to the google form
 async function submitToForm() {
-    var shareConfirmation
+    var shareConfirmation = true
 
-    if (document.getElementById("saveAddress").checked) {
-        shareConfirmation = confirm("Are you sure you want to share your Ethereum Address?");
+    var saveText = document.getElementById("saveText")
+
+    if (global.totalUsd == 0 || global.totalUsd == null) {
+        saveText.setAttribute("class", "text-danger no-margin")
+        saveText.innerText = "It doesn't look like you have any tokens in your portfolio."
     } else {
-        shareConfirmation = true
-    }
-
-    if (shareConfirmation) {
-        if (global.tokens != "" && global.output.length < 20000) {
-            form = {
-                formId: "1FAIpQLScUslukowSoxtDokclveTORdhmlEUHV1lTcaESbTCguuzwZxw",
-                percentage: "500393463",
-                totalUsd: "1940177998",
-                accounts: "143080195",
-                customTokens: "1637198069"
-            }
-
-            let entries = ""
-
-            entries += "&entry." + form.percentage + "=" + global.output
-            if (document.getElementById("saveTotal").checked) {
-                entries += "&entry." + form.totalUsd + "=" + global.totalUsd
-            }
-            if (document.getElementById("saveAddress").checked) {
-                entries += "&entry." + form.accounts + "=" + global.accounts
-                entries += "&entry." + form.customTokens + "=" + global.customTokens
-            }
-
-            try {
-                var range = "A:A"
-
-                var sheet = await getSheetRange(range)
-
-                var url = [location.protocol, '//', location.host, location.pathname].join('');
-
-                var foliourl = url + "?row=" + (sheet.values.length + 1)
-
-                document.getElementById("shareLink").innerHTML = `<div class="alert alert-success" role="alert">Your ethfolio can be found at: <a href="${foliourl}">${foliourl}</a></div>`
-
-            } catch (error) {
-                console.error(error)
-
-            }
-
-            try {
-                console.log("Disregard the error related to 'Access-Control-Allow-Origin', submission should work.")
-                var response = await fetch("https://docs.google.com/forms/d/e/" + form.formId + "/formResponse?" + entries,
-                    {
-                        method: "post"
-                    })
-            } catch (error) {
-                console.error(error)
-            }
-
-            console.log("Done!")
-        } else {
-            document.getElementById("output").innerHTML = "Make sure to load your address first!"
+        if (document.getElementById("saveAddress").checked) {
+            shareConfirmation = confirm("Are you sure you want to share your Ethereum Address?");
         }
-    } else {
-        console.log("Didn't save your information.")
+
+        if (shareConfirmation) {
+            if (global.tokens != "" && global.output.length < 20000) {
+
+
+
+                form = {
+                    formId: "1FAIpQLScUslukowSoxtDokclveTORdhmlEUHV1lTcaESbTCguuzwZxw",
+                    percentage: "500393463",
+                    totalUsd: "1940177998",
+                    accounts: "143080195",
+                    customTokens: "1637198069"
+                }
+
+                let entries = ""
+
+                entries += "&entry." + form.percentage + "=" + global.output
+                if (document.getElementById("saveTotal").checked) {
+                    entries += "&entry." + form.totalUsd + "=" + global.totalUsd
+                }
+                if (document.getElementById("saveAddress").checked) {
+                    entries += "&entry." + form.accounts + "=" + global.accounts
+                    entries += "&entry." + form.customTokens + "=" + global.customTokens
+                }
+
+                try {
+                    var range = "A:A"
+
+                    var sheet = await getSheetRange(range)
+
+                    var url = [location.protocol, '//', location.host, location.pathname].join('');
+
+                    var foliourl = url + "?row=" + (sheet.values.length + 1)
+
+                    document.getElementById("shareLink").innerHTML = `<div class="alert alert-success" role="alert">Your ethfolio can be found at: <a href="${foliourl}">${foliourl}</a></div>`
+
+                } catch (error) {
+                    console.error(error)
+
+                }
+
+                try {
+                    console.log("Disregard the error related to 'Access-Control-Allow-Origin', submission should work.")
+                    var response = await fetch("https://docs.google.com/forms/d/e/" + form.formId + "/formResponse?" + entries,
+                        {
+                            method: "post"
+                        })
+                } catch (error) {
+                    console.error(error)
+                }
+
+                console.log("Done!")
+            } else {
+                document.getElementById("output").innerHTML = "Make sure to load your address first!"
+            }
+        } else {
+            saveText.innerText = "Didn't save your information."
+            saveText.setAttribute("class", "no-margin")
+        }
     }
 }
 
@@ -846,6 +877,7 @@ async function getRow(rowNumber) {
                 console.log("Hmm... something wrong with google sheet response.")
             }
 
+            //this logic doesnt look right... but no bugs yet.
             if (addresses) {
                 console.log('recalculating')
                 setAddresses(JSON.parse(addresses))
@@ -870,54 +902,56 @@ function setCustomTokens(customTokens) {
     var inputs = document.getElementById("inputs");
 
     for (token in customTokens) {
-        addCustomToken(customTokens[token])
+        addCustomToken(customTokens[token], true)
     }
 }
 
 function setAddresses(addresses, depth = 2) {
-    //removing the first blank line
-    var inputs = document.getElementById('inputs')
-    while (inputs.firstChild) {
-        inputs.removeChild(inputs.firstChild)
-    }
-    //add an input field with value for each address we loaded
+    //add a disabled input field with value for each address we loaded
     if (depth == 2) {
         for (addresstype in addresses) {
             //remove duplicates in array
             addresses[addresstype] = [...new Set(addresses[addresstype])]
             for (address in addresses[addresstype]) {
-                addInput(addresses[addresstype][address])
+                addInput(addresses[addresstype][address], true)
             }
         }
     } else if (depth == 1) {
         addresses = [...new Set(addresses)]
         for (address in addresses) {
-            addInput(addresses[address])
+            addInput(addresses[address], true)
         }
     }
+}
+
+function addCallToAction() {
+    var buttons = document.getElementById("actionButtons")
+    buttons.innerHTML = '<div class="text-center"><br><a class="btn btn-success" role="button" href=".">Create your own portfolio ></a><div>'
 }
 
 window.onload = async function () {
     //Get a ton of token metadata
     //global.cryptoCompareTokens = await fetchCustomTokens();
     //check for 'row' querystring
-    var row = getParameterByName('row')
+    var row = getParameterByName('row');
     //check for 'a' querystring
-    var a = getParameterByName('a')
+    var a = getParameterByName('a');
     if (row) {
         if (row > 1) {
-            console.log("Getting Row " + row)
-            document.getElementById("output").innerHTML = "<h2 class='text-center'>Loading portfolio...</h2>"
-            getRow(row)
+            console.log("Getting Row " + row);
+            document.getElementById("output").innerHTML = "<h2 class='text-center'>Loading portfolio...</h2>";
+            getRow(row);
+            addCallToAction();
         } else {
-            document.getElementById("output").innerHTML = "Not a valid row"
+            document.getElementById("output").innerHTML = "Not a valid row";
         }
     } else if (a) {
         var addresses = a.split(',')
-        document.getElementById("output").innerHTML = "<h2 class='text-center'>Loading portfolio...</h2>"
-        setAddresses(addresses, 1)
-        calculateAllBalances(false)
+        document.getElementById("output").innerHTML = "<h2 class='text-center'>Loading portfolio...</h2>";
+        setAddresses(addresses, 1);
+        calculateAllBalances(false);
+        addCallToAction();
     } else {
-        document.getElementsByClassName("walkthrough")[0].style.display = "unset"
+        document.getElementsByClassName("walkthrough")[0].style.display = "unset";
     }
 }

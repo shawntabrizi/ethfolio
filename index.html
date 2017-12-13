@@ -15,12 +15,12 @@
 <body>
     <div class="container-fluid">
         <div class="jumbotron">
-            <h1 class="display-3"><a href="http://ethfol.io" class="banner">ethfol.i<img src="icon-lg.png" class="banner-o" alt="o" /></a></h1>
+            <h1 class="display-3"><a href="." class="banner">ethfol.i<img src="icon-lg.png" class="banner-o" alt="o" /></a></h1>
             <p class="lead">Share your cryptocurrency portfolio, without sharing your personal information.</p>
             <hr class="my-4">
             <div id="inputs">
             </div>
-            <p class="lead">
+            <p class="lead" id="actionButtons">
                 <a class="btn btn-secondary btn-sm" role="button" onclick="addInput();">Add wallet address</a>
                 <a class="btn btn-secondary btn-sm" role="button" onclick="addCustomToken();">Add custom token</a>
                 <a class="btn btn-primary btn-sm text-light" role="button" onclick="calculateAllBalances();">Calculate Portfolio</a>
@@ -28,7 +28,7 @@
             <div id="submission" class="submission">
                 <div class="row">
                     <div class="col">
-                        <div class="alert alert-info" role="alert">
+                        <div class="alert alert-info" role="alert" id="saveArea">
                             <div class="form-check form-check-inline">
                                 <label class="form-check-label">
                                     <input class="form-check-input" type="checkbox" id="saveTotal" onclick="checkAddress();" /> Store Total USD Value?
@@ -40,6 +40,7 @@
                                 </label>
                             </div>
                             <a class="btn btn-info btn-sm" role="button" onclick="submitToForm();">Save & Share</a>
+                            <p id="saveText"></p>
                         </div>
                     </div>
                 </div>
@@ -150,7 +151,7 @@
 
     <footer class="footer fixed-bottom">
         <div class="container">
-            <span class="text-muted"><a href="http://ethfol.io/">ethfolio</a> &copy; - Created by <a href="http://shawntabrizi.com/">Shawn Tabrizi</a> - Powered by <a href="https://ethplorer.io/">Ethplorer.io</a>, <a href="https://www.cryptocompare.com/">CryptoCompare</a>, <a href="https://blockchain.info/">Blockchain.info</a>, and <a href="https://www.blockcypher.com/">BlockCypher</a> - Using <a href="http://www.chartjs.org/">Chart.js</a> and Google <a href="https://www.google.com/forms/about/">Forms</a> + <a href="https://www.google.com/sheets/about/">Sheets</a> - Source on <a href="https://github.com/shawntabrizi/ethfolio">GitHub</a></span>
+            <span class="text-muted"><a href=".">ethfolio</a> &copy; - Created by <a href="http://shawntabrizi.com/">Shawn Tabrizi</a> - Powered by <a href="https://ethplorer.io/">Ethplorer.io</a>, <a href="https://www.cryptocompare.com/">CryptoCompare</a>, <a href="https://blockchain.info/">Blockchain.info</a>, and <a href="https://www.blockcypher.com/">BlockCypher</a> - Using <a href="http://www.chartjs.org/">Chart.js</a> and Google <a href="https://www.google.com/forms/about/">Forms</a> + <a href="https://www.google.com/sheets/about/">Sheets</a> - Source on <a href="https://github.com/shawntabrizi/ethfolio">GitHub</a></span>
         </div>
     </footer>
 
