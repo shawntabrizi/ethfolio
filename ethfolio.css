@@ -65,3 +65,8 @@ body {
 p:empty {
     display: none;
 }
+
+.condensed-input {
+    max-height: 20vh;
+    overflow-y: auto;
+}

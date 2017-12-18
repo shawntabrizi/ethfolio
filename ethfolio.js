@@ -1,10 +1,8 @@
 var global = {
-    "tokens": "",
-    "totalUsd": "",
-    "accounts": "",
-    "output": "",
-    "customTokens": "",
-    "cryptoCompareTokens": null
+    "percents": "",
+    "balances": "",
+    "fullData": "",
+    "display": ""
 };
 
 //only allow save address if save total is selected
@@ -19,11 +17,13 @@ function checkAddress() {
 }
 
 //token object
-function tokenConstructor(symbol, balance, price, name, percentage, total) {
+function tokenConstructor(symbol, balance, price, name, percentage, total, id) {
+    //These are retrieved
     this.symbol = symbol;
     this.balance = balance;
     this.price = price;
     this.name = name;
+    //These are calculated
     this.percentage = percentage;
     this.total = total;
 }
@@ -107,9 +107,13 @@ async function getETHBalances(addresses) {
 
 //get the price of a coin by symbol
 async function getPrice(coin) {
-    var response = await fetch('https://min-api.cryptocompare.com/data/price?fsym=' + coin + '&tsyms=USD')
-    var price = await response.json()
-    return price['USD']
+    var coinDict = JSON.parse(sessionStorage.coinDict)
+    if (coin in coinDict) {
+        return parseFloat(coinDict[coin]['price_usd'])
+    } else {
+        return 0
+    }
+    
 }
 
 //parse and collect all the eth tokens
@@ -127,8 +131,7 @@ async function collectTokens(balances) {
                     var symbol = tok['tokenInfo']['symbol']
                     let tokObj = new tokenConstructor()
                     tokObj.symbol = symbol
-                    tokObj.price = price['rate']
-                    tokObj.name = tok['tokenInfo']['name']
+                    tokObj.price = await getPrice(symbol)
                     tokObj.balance = tok['balance'] / (Math.pow(10, tok['tokenInfo']['decimals']))
                     tokens.push(tokObj)
                 }
@@ -183,7 +186,7 @@ document.getElementById("inputs").addEventListener('input', function (event) {
     if (event.target.classList.contains('address-input')) {
         setAddressType(event.target)
     }
-})
+});
 
 function setAddressType(element) {
     var addressType = discoverAddressType(element.value)
@@ -218,15 +221,18 @@ function discoverAddressType(address) {
 }
 
 function percentageOfTotal(tokens, total) {
-
+    let tokensOut = []
     for (tok in tokens) {
-        token = tokens[tok]
+        var token = tokens[tok]
         if (total > 0) {
-            token.percentage = token.total / total
+            token.percentage = (token.total / total).toPrecision(4)
         } else {
             token.percentage = 0
         }
+        tokensOut.push(token)
     }
+
+    return tokensOut
 }
 
 function showSubmission() {
@@ -236,6 +242,10 @@ function showSubmission() {
     saveText.setAttribute("class", "")
 }
 
+function deleteInput(e) {
+    e.parentNode.parentNode.removeChild(e.parentNode)
+}
+
 function addInput(value, disabled = false) {
     var inputGroup = document.createElement("div")
     inputGroup.setAttribute("class", "input-group address")
@@ -243,15 +253,24 @@ function addInput(value, disabled = false) {
     input.setAttribute("type", "text")
     input.setAttribute("class", "form-control address-input")
     input.setAttribute("placeholder", "ETH, BTC, or LTC Address")
-    if (disabled) {
-        input.disabled = true;
-    }
+
 
     var span = document.createElement("span")
     span.setAttribute("class", "input-group-addon token-label-2")
 
     inputGroup.appendChild(input)
     inputGroup.appendChild(span)
+
+    if (disabled) {
+        input.disabled = true;
+    } else {
+        var del = document.createElement("span")
+        del.setAttribute("class", "input-group-addon btn-danger thin-close text-center")
+        del.innerHTML = "&times;"
+        del.setAttribute("onclick", "deleteInput(this);")
+        inputGroup.appendChild(del)
+    }
+
     if (value) {
         input.setAttribute("value", value)
         setAddressType(input)
@@ -261,11 +280,44 @@ function addInput(value, disabled = false) {
     document.getElementById('inputs').appendChild(inputGroup)
 }
 
-async function fetchCustomTokens() {
-    var response = await fetch('https://min-api.cryptocompare.com/data/all/coinlist');
-    var data = await response.json()
+async function getAllTokens() {
+    //Get all token metadata from coinmarketcap
+    var update = true;
 
-    return data['Data']
+    //only call once per minute
+    if (sessionStorage.time) {
+        let d = new Date();
+        let timeDiff = d.getTime() - sessionStorage.time
+        let minutes = Math.floor((timeDiff / 1000) / 60);
+        if (minutes < 1) {
+            update = false;
+        }
+    }
+
+    if (!sessionStorage.coinDict || update) {
+        var coinDict = {}
+        try {
+            let d = new Date();
+            sessionStorage.time = d.getTime();
+            console.log("Fetching price data from Coinmarketcap at:" + JSON.parse(sessionStorage.time))
+            var response = await fetch('https://api.coinmarketcap.com/v1/ticker/?limit=0');
+            var data = await response.json()
+
+            for (tok in data) {
+                let token = data[tok]
+                if (token.symbol in coinDict) {
+                    console.log("Hmm... two tokens with the same symbol: " + token.symbol)
+                } else {
+                    coinDict[token.symbol] = token
+                }
+            }
+        } catch (error) {
+            console.log(error)
+        }
+        return JSON.stringify(coinDict);
+    } else {
+        return sessionStorage.coinDict
+    }
 }
 
 async function addCustomToken(customToken, disabled = false) {
@@ -275,7 +327,6 @@ async function addCustomToken(customToken, disabled = false) {
         var value = customToken[1]
         var symbol = customToken[2]
     }
-
 
     var inputGroup = document.createElement("div")
     inputGroup.setAttribute("class", "input-group custom-token")
@@ -297,48 +348,26 @@ async function addCustomToken(customToken, disabled = false) {
     input.setAttribute("class", "form-control")
     input.setAttribute("placeholder", "# or total $ of token")
 
-
-    // This code makes a drop down list of all the tokens available on CryptoCompare
-    /*
-    var sym = document.createElement("select")
-    sym.setAttribute("class", "input-group-addon symbol-select")
-
-    if (!global.cryptoCompareTokens) {
-        global.cryptoCompareTokens = await fetchCustomTokens();
-    }
-
-    var options = []
-
-    
-    for (token in global.cryptoCompareTokens) {
-        let option = document.createElement("option")
-        option.innerText = token;
-        option.value = token;
-        option.setAttribute('data-sort-order', global.cryptoCompareTokens[token]['SortOrder'])
-        options.push(option)
-    }
-
-    options = options.sort(sortOrder)
-
-    for (option in options) {
-        sym.appendChild(options[option])
-    }
-    */
-
     var sym = document.createElement("input")
     sym.setAttribute("class", "input-group-addon token-label")
     sym.setAttribute("type", "text")
     sym.setAttribute("placeholder", "SYM")
 
+    inputGroup.appendChild(dropdown)
+    inputGroup.appendChild(input)
+    inputGroup.appendChild(sym)
+
     if (disabled) {
         dropdown.disabled = true;
         input.disabled = true;
         sym.disabled = true;
+    } else {
+        var del = document.createElement("span")
+        del.setAttribute("class", "input-group-addon btn-danger thin-close text-center")
+        del.innerHTML = "&times;"
+        del.setAttribute("onclick", "deleteInput(this);")
+        inputGroup.appendChild(del)
     }
-
-    inputGroup.appendChild(dropdown)
-    inputGroup.appendChild(input)
-    inputGroup.appendChild(sym)
 
     if (type) {
         dropdown.value = type;
@@ -394,7 +423,7 @@ function collectAddresses(addresses) {
     return output
 }
 
-function storeCustomTokens() {
+function collectCustomTokens() {
     var output = []
 
     var inputgroups = document.getElementsByClassName("custom-token");
@@ -405,6 +434,7 @@ function storeCustomTokens() {
         var sym = inputgroups[i].getElementsByClassName("token-label")[0].value
 
         if (value != "" && sym != "") {
+            value = value.split(",").join("")
             sym = sym.toUpperCase();
             output.push([type, value, sym])
         }
@@ -415,79 +445,76 @@ function storeCustomTokens() {
 
 }
 
-async function collectCustomTokens() {
-    var inputgroups = document.getElementsByClassName("custom-token");
+async function getCustomTokens(customTokensInput) {
 
     var customTokens = []
 
-    for (let i = inputgroups.length - 1; i >= 0; i--) {
-        var type = inputgroups[i].getElementsByTagName("select")[0].value;
-        var value = inputgroups[i].getElementsByClassName("form-control")[0].value
-        var sym = inputgroups[i].getElementsByClassName("token-label")[0].value
+    for (tok in customTokensInput) {
 
-        if (value != "" && sym != "") {
-            sym = sym.toUpperCase();
+        var type = customTokensInput[tok][0]
+        var value = customTokensInput[tok][1]
+        var sym = customTokensInput[tok][2]
 
-            var token = new tokenConstructor()
+        var token = new tokenConstructor()
+        //take into account commas in the value
 
-            if (type == 'dollar') {
-                token.symbol = sym
-                token.total = parseFloat(value)
-                if (global.cryptoCompareTokens) {
-                    if (global.cryptoCompareTokens[sym]) {
-                        token.name = global.cryptoCompareTokens[sym]['CoinName']
-                    }
-                }
-            } else if (type == 'number') {
-                token.symbol = sym
-                if (global.cryptoCompareTokens) {
-                    if (global.cryptoCompareTokens[sym]) {
-                        token.name = global.cryptoCompareTokens[sym]['CoinName']
-                    }
-                }
-                token.balance = parseFloat(value)
-                token.price = await getPrice(sym)
+        token.symbol = sym
+
+        if (type == 'dollar') {
+            token.price = await getPrice(sym)
+            if (token.price) {
+                token.balance = value / token.price;
+            } else {
+                token.total = parseFloat(value);
             }
-
-            customTokens.push(token)
+        } else if (type == 'number') {
+            token.balance = parseFloat(value);
+            token.price = await getPrice(sym);
         }
-    }
 
+        customTokens.push(token)
+    }
 
     return customTokens;
 }
 
 function consolidateTokens(tokens) {
-    tokenTracker = {}
-    outputTokens = []
+    var tokenDict = {}
+    var orderedTokens = []
 
     for (tok in tokens) {
         var token = tokens[tok]
-        if (!token.total) {
+        if (token.balance && token.price) {
             token.total = token.price * token.balance
         }
 
+        //catch any problems with the total
         if (isNaN(token.total)) {
             token.total = 0;
         }
 
-        if (token.symbol in tokenTracker) {
+        if (token.symbol in tokenDict) {
             console.log("Consolidating: " + token.symbol)
-            tokenTracker[token.symbol].total += token.total;
+            tokenDict[token.symbol].total += token.total;
+            tokenDict[token.symbol].balance += token.balance;
         } else {
-            tokenTracker[token.symbol] = token
+            tokenDict[token.symbol] = token
         }
     }
 
-    for (token in tokenTracker) {
-        outputTokens.push(tokenTracker[token])
+    for (token in tokenDict) {
+        orderedTokens.push(tokenDict[token])
     }
 
-    return outputTokens
+    //order the tokens by relative percentage of the total
+    orderedTokens.sort(compareTotal)
+
+    return orderedTokens
 }
 
 async function calculateAllBalances(newAddress = true) {
     try {
+        //All tokens, raw
         var tokens = []
 
         //Addresses should always be populated in the inputs section
@@ -509,44 +536,69 @@ async function calculateAllBalances(newAddress = true) {
             tokens.push(await getLTCBalances(addresses.LTC))
         }
 
-        //get custom tokens
-        var customTokens = await collectCustomTokens()
-
-        if (customTokens) {
+        //get custom tokens from inputs
+        var customTokensInput = collectCustomTokens()
+        if (customTokensInput) {
+        //get custom token prices, populate the token objects
+            var customTokens = await getCustomTokens(customTokensInput)
             tokens = tokens.concat(customTokens)
         }
 
-        tokens = consolidateTokens(tokens)
+        //Combining all duplicate tokens, their balance, and total value, then ordering by total value
+        //This is a sorted array
+        var consolidatedTokens = consolidateTokens(tokens)
 
         //find total value of all tokens, also calculate total per token
-        var total = totalPrice(tokens)
-
-        //sort tokens by relative value
-        tokens.sort(compareTotal)
-
-        //This stores the main data that will be saved, tokens and percentages
-        var output = []
+        var total = totalPrice(consolidatedTokens)
 
         //calculate the percentage each token represents of the USD total
-        percentageOfTotal(tokens, total)
+        consolidatedTokens = percentageOfTotal(consolidatedTokens, total)
 
-        //tokens has more data than we need, so we cut it down to save space on sheets
-        for (symbol in tokens) {
-            token = tokens[symbol]
-            output.push([token.symbol, (token.percentage).toPrecision(4)])
+        //At this point, we have all the data we need to create our various outputs.
+        //Need to transform data to have the right amount of info per save settings
+
+        //1. Array of Token Symbol + Percentage
+        var percentOut = []
+        for (tok in consolidatedTokens) {
+            let token = consolidatedTokens[tok]
+            percentOut.push([token.symbol, token.percentage])
         }
 
-        //store custom tokens
-        var customTokensOut = storeCustomTokens()
+        //2. Array of Tokens as Custom Inputs ([type,value,symbol])
+        var balanceOut = []
+        for (tok in consolidatedTokens) {
+            let token = consolidatedTokens[tok]
+            if (token.balance) {
+                balanceOut.push(['number', token.balance, token.symbol])
+            } else {
+                balanceOut.push(['dollar', token.total, token.symbol])
+            }
+        }
 
-        //convert to JSON to be stored
-        global.tokens = JSON.stringify(tokens)
-        global.accounts = JSON.stringify(addresses)
-        global.totalUsd = JSON.stringify(total)
-        global.output = JSON.stringify(output)
-        global.customTokens = JSON.stringify(customTokensOut)
+        //3. Address + Custom Token Information... all the data that was inputted into the site, not condensed
+        var addressOut = [];
+        for (addressType in addresses) {
+            addressOut = addressOut.concat(addresses[addressType]);
+        }
+        var customInputsOut = customTokensInput;
 
-        displayAllBalances(global.output, global.totalUsd);
+        fullDataOut = [addressOut, customInputsOut]
+
+        //4. The information we ultimately want to display as a whole
+        var displayOut = []
+        for (tok in consolidatedTokens) {
+            let token = consolidatedTokens[tok];
+            displayOut.push([token.symbol, token.percentage, token.balance, token.price, token.total])
+        }
+
+
+        //convert to JSON to be stored in sheets
+        global.percents = JSON.stringify(percentOut)
+        global.balances = JSON.stringify(balanceOut)
+        global.fullData = JSON.stringify(fullDataOut)
+
+        displayAllBalances(displayOut, total);
+
         if (newAddress) {
             showSubmission();
         }
@@ -557,14 +609,12 @@ async function calculateAllBalances(newAddress = true) {
     }
 }
 
-function displayAllBalances(outputJSON, totalJSON) {
+function displayAllBalances(tokens, total) {
     document.getElementById("output").innerHTML = ""
 
-    var output = JSON.parse(outputJSON)
-    var totalString = ""
-
-    if (totalJSON) {
-        var total = JSON.parse(totalJSON)
+    //check there is at least one element
+    if (total) {
+        var totalString
         //if you have more than $1000, who cares about cents?
         if (parseFloat(total) < 1000) {
             // add a comma to thousands place, ensure that it is 2 running decimals
@@ -576,15 +626,23 @@ function displayAllBalances(outputJSON, totalJSON) {
 
     var table = ""
 
+    //Check if we have extended data, or just percentages
+    var extendedTable = false;
+    if (tokens[0].length > 2) {
+        extendedTable = true;
+    }
+
     //note we check if total is available, if so, add it to the table
     table += `<table class="table table-striped">
                     <thead>
                         <tr>
                             <th scope="col" class="col-color"></th>
-                            <th scope="col">#</th>
+                            <th scope="col"></th>
                             <th scope="col">Token</th>
                             <th scope="col">%</th>
-                            ${ total ? '<th scope="col">USD</th>' : ''}
+                            ${ extendedTable ? '<th scope="col">$</th>' : ''}
+                            ${ extendedTable ? '<th scope="col">#</th>' : ''}
+                            ${ extendedTable ? '<th scope="col">$/#</th>' : ''}
                         </tr>
                     </thead>
                     <tbody>`
@@ -592,13 +650,15 @@ function displayAllBalances(outputJSON, totalJSON) {
     var view = []
     var other = ["Other", 0]
 
-    for (symbol in output) {
-        token = output[symbol][0]
-        percentage = parseFloat(output[symbol][1])
+    for (tok in tokens) {
+        let token = tokens[tok]
+        let symbol = token[0]
+        let percentage = parseFloat(token[1])
+
         if (percentage < .005) {
             other[1] += percentage
         } else {
-            view.push([token, percentage])
+            view.push([symbol, percentage])
         }
     }
 
@@ -609,20 +669,25 @@ function displayAllBalances(outputJSON, totalJSON) {
     createGraph(view, totalString);
     var legend = createLegend(window.myDoughnutChart)
 
+    var count = 0;
+    for (tok in tokens) {
+        count++;
 
-    for (symbol in output) {
-        token = output[symbol][0]
-        percentage = parseFloat(output[symbol][1])
+        let token = tokens[tok];
+        let symbol = token[0]
+        let percentage = parseFloat(token[1])
+
+        console.log(token[3],(token[3]).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 }))
 
         table += `<tr>
-                        <td class="col-color" style="background-color: ${legend[token] ? legend[token] : legend['Other']}" ></td>
-                        <th scope="row">${parseInt(symbol) + 1}</th>
-                        <td>${token}</td>
+                        <td class="col-color" style="background-color: ${legend[symbol] ? legend[symbol] : legend['Other']}" ></td>
+                        <th scope="row">${count}</th>
+                        <td>${symbol}</td>
                         <td>${(percentage * 100).toPrecision(4) + "%"}</td>
-                        ${ total ? '<td>$' + (percentage * total).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 }) + '</td>' : ''}
+                        ${ extendedTable ? (token[4] ? '<td>$' + (token[4] < 1 ? (token[4]).toPrecision(4) : (token[4]).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })) + '</td>' : '<td>?</td>') : ''}
+                        ${ extendedTable ? (token[2] ? '<td>' + (token[2] < 1 ? (token[2]).toPrecision(4) : token[2] < 1000 ? (token[2]).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 }) : (token[2]).toLocaleString(undefined, { maximumFractionDigits: 0, minimumFractionDigits: 0 })) + '</td>' : '<td>?</td>') : ''}
+                        ${ extendedTable ? (token[3] ? '<td>$' + (token[3] < 1 ? (token[3]).toPrecision(4) : (token[3]).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })) + '</td>' : '<td>?</td>') : ''}
                     </tr>`
-
-
     }
 
     table += `</tbody>
@@ -759,7 +824,7 @@ async function submitToForm() {
 
     var saveText = document.getElementById("saveText")
 
-    if (global.totalUsd == 0 || global.totalUsd == null) {
+    if (global.percents == "") {
         saveText.setAttribute("class", "text-danger no-margin")
         saveText.innerText = "It doesn't look like you have any tokens in your portfolio."
     } else {
@@ -768,29 +833,33 @@ async function submitToForm() {
         }
 
         if (shareConfirmation) {
-            if (global.tokens != "" && global.output.length < 20000) {
 
+            form = {
+                formId: "1FAIpQLScUslukowSoxtDokclveTORdhmlEUHV1lTcaESbTCguuzwZxw",
+                dataType: "500393463",
+                data: "1940177998",
+                extra1: "143080195",
+                extra2: "1637198069"
+            }
 
+            var datatype
+            var data
 
-                form = {
-                    formId: "1FAIpQLScUslukowSoxtDokclveTORdhmlEUHV1lTcaESbTCguuzwZxw",
-                    percentage: "500393463",
-                    totalUsd: "1940177998",
-                    accounts: "143080195",
-                    customTokens: "1637198069"
-                }
+            if (document.getElementById("saveAddress").checked) {
+                datatype = 3
+                data = global.fullData
+            } else if (document.getElementById("saveTotal").checked) {
+                datatype = 2
+                data = global.balances
+            } else {
+                datatype = 1
+                data = global.percents
+            }
 
-                let entries = ""
+            let payload = "entry." + form.dataType + "=" + datatype + "&entry." + form.data + "=" + data;
 
-                entries += "&entry." + form.percentage + "=" + global.output
-                if (document.getElementById("saveTotal").checked) {
-                    entries += "&entry." + form.totalUsd + "=" + global.totalUsd
-                }
-                if (document.getElementById("saveAddress").checked) {
-                    entries += "&entry." + form.accounts + "=" + global.accounts
-                    entries += "&entry." + form.customTokens + "=" + global.customTokens
-                }
-
+            //testing the limits of google form payload
+            if (payload.length < 32700) {
                 try {
                     var range = "A:A"
 
@@ -807,11 +876,16 @@ async function submitToForm() {
 
                 }
 
+
                 try {
                     console.log("Disregard the error related to 'Access-Control-Allow-Origin', submission should work.")
-                    var response = await fetch("https://docs.google.com/forms/d/e/" + form.formId + "/formResponse?" + entries,
+                    var response = await fetch("https://docs.google.com/forms/d/e/" + form.formId + "/formResponse",
                         {
-                            method: "post"
+                            method: "POST",
+                            headers: new Headers({
+                                'Content-Type': 'application/x-www-form-urlencoded'
+                            }),
+                            body: payload
                         })
                 } catch (error) {
                     console.error(error)
@@ -819,7 +893,8 @@ async function submitToForm() {
 
                 console.log("Done!")
             } else {
-                document.getElementById("output").innerHTML = "Make sure to load your address first!"
+                saveText.setAttribute("class", "text-danger no-margin")
+                saveText.innerText = "Too much data to save... message shawntabrizi@gmail.com, and tell him you saw this error."
             }
         } else {
             saveText.innerText = "Didn't save your information."
@@ -839,6 +914,27 @@ function getParameterByName(name, url) {
     return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
 
+function parseQueryStrings() {
+    var queryStrings = {};
+    var url = window.location.search.substring(1);
+    if (url) {
+        var pairs = url.split("&");
+        for (pair in pairs) {
+            pairArray = pairs[pair].split("=");
+            let name = pairArray[0]
+            let value = pairArray[1]
+
+            if (name in queryStrings) {
+                queryStrings[name].push(value)
+            } else {
+                queryStrings[name] = [value]
+            }
+        }
+    }
+    
+    return queryStrings;
+}
+
 //call the google sheets api
 async function getSheetRange(range) {
     extra = "P2tleT1BSXphU3lDSlVham9"
@@ -856,37 +952,38 @@ async function getRow(rowNumber) {
         var range = "A" + rowNumber + ":E" + rowNumber
 
         var sheet = await getSheetRange(range)
+        var values = sheet.values[0]
 
         if (sheet.values) {
-
-            var values = sheet.values[0]
-
             if (values.length >= 2 && values.length < 6) {
                 var time = values[0]
-                var percentage = values[1]
-                if (values[2]) {
-                    var totalUSD = values[2]
-                }
-                if (values[3]) {
-                    var addresses = values[3]
-                }
-                if (values[4]) {
-                    var customTokens = values[4]
-                }
-            } else {
-                console.log("Hmm... something wrong with google sheet response.")
-            }
+                var dataType = parseInt(values[1])
+                var data = JSON.parse(values[2])
 
-            //this logic doesnt look right... but no bugs yet.
-            if (addresses) {
-                console.log('recalculating')
-                setAddresses(JSON.parse(addresses))
-                if (customTokens) {
-                    setCustomTokens(JSON.parse(customTokens))
+                if (dataType == 1) {
+                    //expecting just percent data
+                    displayAllBalances(data)
+                }else if (dataType == 2) {
+                    //expecting custom data input consolidated
+                    setCustomTokens(data)
+                    document.getElementById("inputs").style.display = 'none';
+                    calculateAllBalances(false);
+                } else if (dataType == 3) {
+                    //expecting custom data input and addresses
+                    console.log(data)
+                    if (data[0]) {
+                        setAddresses(data[0])
+                    }
+                    if (data[1]) {
+                        setCustomTokens(data[1])
+                    }
+                    document.getElementById("inputs").setAttribute("class", "condensed-input");
+                    calculateAllBalances(false);
+                } else {
+                    document.getElementById('output').innerHTML = "Unknown data type..."
                 }
-                calculateAllBalances(false)
             } else {
-                displayAllBalances(percentage, totalUSD)
+                document.getElementById('output').innerHTML = "Hmm... something wrong with google sheet response."
             }
         } else {
             document.getElementById('output').innerHTML = "No data found at that row... if you just saved, wait a second and refresh the page."
@@ -906,21 +1003,11 @@ function setCustomTokens(customTokens) {
     }
 }
 
-function setAddresses(addresses, depth = 2) {
+function setAddresses(addresses) {
     //add a disabled input field with value for each address we loaded
-    if (depth == 2) {
-        for (addresstype in addresses) {
-            //remove duplicates in array
-            addresses[addresstype] = [...new Set(addresses[addresstype])]
-            for (address in addresses[addresstype]) {
-                addInput(addresses[addresstype][address], true)
-            }
-        }
-    } else if (depth == 1) {
-        addresses = [...new Set(addresses)]
-        for (address in addresses) {
-            addInput(addresses[address], true)
-        }
+    addresses = [...new Set(addresses)]
+    for (address in addresses) {
+        addInput(addresses[address], true)
     }
 }
 
@@ -930,28 +1017,54 @@ function addCallToAction() {
 }
 
 window.onload = async function () {
-    //Get a ton of token metadata
-    //global.cryptoCompareTokens = await fetchCustomTokens();
-    //check for 'row' querystring
-    var row = getParameterByName('row');
-    //check for 'a' querystring
-    var a = getParameterByName('a');
-    if (row) {
-        if (row > 1) {
-            console.log("Getting Row " + row);
-            document.getElementById("output").innerHTML = "<h2 class='text-center'>Loading portfolio...</h2>";
-            getRow(row);
-            addCallToAction();
+
+    var queryStrings = parseQueryStrings();
+
+    if (Object.keys(queryStrings).length > 0) {
+        //Get data from coinmarketcap data
+        sessionStorage.coinDict = await getAllTokens();
+        if ('row' in queryStrings) {
+            let row = queryStrings['row'][0]
+            if (row > 1) {
+                console.log("Getting Row " + row);
+                document.getElementById("output").innerHTML = "<h2 class='text-center'>Loading portfolio...</h2>";
+                getRow(row);
+                addCallToAction();
+            } else {
+                document.getElementById("output").innerHTML = "Not a valid row";
+            }
         } else {
-            document.getElementById("output").innerHTML = "Not a valid row";
+            document.getElementById("output").innerHTML = "<h2 class='text-center'>Loading portfolio...</h2>";
+            for (name in queryStrings) {
+                if (name == 'a'){
+                    let a = queryStrings['a'].join()
+                    var addresses = a.split(',')
+                    setAddresses(addresses, 1);
+                } else {
+                    let tokenValues = queryStrings[name].join()
+                    tokenValues = tokenValues.split(',')
+                    for (token in tokenValues) {
+                        var value = tokenValues[token]
+                        var sym = name
+                        var type
+                        if(value[0] == '$') {
+                            type = 'dollar'
+                            value = value.slice(1)
+                        } else {
+                            type = 'number'
+                        }
+                        addCustomToken([type,value,sym],true)
+                    }
+                }
+
+            }
+            calculateAllBalances(false);
+            addCallToAction();
+
         }
-    } else if (a) {
-        var addresses = a.split(',')
-        document.getElementById("output").innerHTML = "<h2 class='text-center'>Loading portfolio...</h2>";
-        setAddresses(addresses, 1);
-        calculateAllBalances(false);
-        addCallToAction();
     } else {
         document.getElementsByClassName("walkthrough")[0].style.display = "unset";
+        //Get data from coinmarketcap after loading the page
+        sessionStorage.coinDict = await getAllTokens();
     }
 }
