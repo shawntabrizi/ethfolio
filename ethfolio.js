@@ -120,33 +120,48 @@ async function getPrice(coin) {
 async function collectTokens(balances) {
     var tokens = []
     var totalPrice = 0
-
+    coinDict = JSON.parse(sessionStorage.coinDict)
 
     for (balance in balances) {
         for (bal in balances[balance]['tokens']) {
             let tok = balances[balance]['tokens'][bal]
-            let price = tok['tokenInfo']['price']
-            if (price != false) {
-                if (price['rate'] != null) {
-                    var symbol = tok['tokenInfo']['symbol']
-                    let tokObj = new tokenConstructor()
-                    tokObj.symbol = symbol
-                    tokObj.price = await getPrice(symbol)
-                    tokObj.balance = tok['balance'] / (Math.pow(10, tok['tokenInfo']['decimals']))
-                    tokens.push(tokObj)
+            let tokObj = new tokenConstructor()
+            let symbol = (tok['tokenInfo']['symbol']).toUpperCase()
+            if (symbol != "") {
+                //token should have a price in ethplorer, or it may be junk coin
+                if (tok['tokenInfo']['price'] != false) {
+                    if (tok['tokenInfo']['price']['rate'] != null) {
+                        //if symbol not in coin market cap, check by name
+                        if (!(symbol in coinDict)) {
+                            for (coin in coinDict) {
+                                if ((coinDict[coin]['name']).toLowerCase() == (tok['tokenInfo']['name']).toLowerCase()) {
+                                    tokObj.symbol = coinDict[coin]['symbol'];
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (!tokObj.symbol) {
+                            tokObj.symbol = symbol
+                        }
+
+                        tokObj.price = await getPrice(tokObj.symbol)
+                        tokObj.balance = tok['balance'] / (Math.pow(10, tok['tokenInfo']['decimals']))
+                        tokens.push(tokObj)
+                    }
                 }
             }
         }
+    }
 
-        //eth itself is in a different layer of the returned json
-        if (balances[balance]['ETH']['balance'] > 0) {
-            let ethObj = new tokenConstructor()
-            ethObj.balance = balances[balance]['ETH']['balance']
-            ethObj.symbol = "ETH"
-            ethObj.name = "Ether"
-            ethObj.price = (await getPrice('ETH')).toString()
-            tokens.push(ethObj)
-        }
+    //eth itself is in a different layer of the returned json
+    if (balances[balance]['ETH']['balance'] > 0) {
+        let ethObj = new tokenConstructor()
+        ethObj.balance = balances[balance]['ETH']['balance']
+        ethObj.symbol = "ETH"
+        ethObj.name = "Ether"
+        ethObj.price = (await getPrice('ETH')).toString()
+        tokens.push(ethObj)
     }
 
     return tokens
@@ -235,11 +250,18 @@ function percentageOfTotal(tokens, total) {
     return tokensOut
 }
 
-function showSubmission() {
+function showSubmission(showAddressSave = true) {
     document.getElementById("submission").style.display = "unset"
     var saveText = document.getElementById("saveText")
     saveText.innerText = ""
     saveText.setAttribute("class", "")
+
+    if (showAddressSave) {
+        document.getElementById("saveAddressArea").style.display = 'unset'
+    } else {
+        document.getElementById("saveAddressArea").style.display = 'none'
+    }
+
 }
 
 function deleteInput(e) {
@@ -599,8 +621,10 @@ async function calculateAllBalances(newAddress = true) {
 
         displayAllBalances(displayOut, total);
 
-        if (newAddress) {
-            showSubmission();
+        if (newAddress && consolidatedTokens.length > 0) {
+            showSubmission((addressOut.length > 0));
+        } else {
+            document.getElementById("submission").style.display = "none"
         }
 
     } catch (error) {
@@ -610,92 +634,116 @@ async function calculateAllBalances(newAddress = true) {
 }
 
 function displayAllBalances(tokens, total) {
-    document.getElementById("output").innerHTML = ""
+    if (tokens.length > 0) {
 
-    //check there is at least one element
-    if (total) {
-        var totalString
-        //if you have more than $1000, who cares about cents?
-        if (parseFloat(total) < 1000) {
-            // add a comma to thousands place, ensure that it is 2 running decimals
-            totalString = '$' + parseFloat(total).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })
-        } else {
-            totalString = '$' + parseFloat(total).toLocaleString(undefined, { maximumFractionDigits: 0 })
+
+        document.getElementById("output").innerHTML = ""
+
+        //check there is at least one element
+        if (total) {
+            var totalString
+            //if you have more than $1000, who cares about cents?
+            if (parseFloat(total) < 1000) {
+                // add a comma to thousands place, ensure that it is 2 running decimals
+                totalString = '$' + parseFloat(total).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })
+            } else {
+                totalString = '$' + parseFloat(total).toLocaleString(undefined, { maximumFractionDigits: 0 })
+            }
         }
-    }
 
-    var table = ""
+        var table = ""
 
-    //Check if we have extended data, or just percentages
-    var extendedTable = false;
-    if (tokens[0].length > 2) {
-        extendedTable = true;
-    }
+        //Check if we have extended data, or just percentages
+        var extendedTable = false;
+        if (tokens[0].length > 2) {
+            extendedTable = true;
+        }
 
-    //note we check if total is available, if so, add it to the table
-    table += `<table class="table table-striped">
+        //note we check if total is available, if so, add it to the table
+        table += `<table class="table table-striped">
                     <thead>
                         <tr>
-                            <th scope="col" class="col-color"></th>
+                            <th scope="col" class="col-color">&nbsp;</th>
                             <th scope="col"></th>
                             <th scope="col">Token</th>
                             <th scope="col">%</th>
                             ${ extendedTable ? '<th scope="col">$</th>' : ''}
                             ${ extendedTable ? '<th scope="col">#</th>' : ''}
-                            ${ extendedTable ? '<th scope="col">$/#</th>' : ''}
+                            <th scope="col">$/#</th>
                         </tr>
                     </thead>
                     <tbody>`
 
-    var view = []
-    var other = ["Other", 0]
+        var view = []
+        var other = ["Other", 0]
 
-    for (tok in tokens) {
-        let token = tokens[tok]
-        let symbol = token[0]
-        let percentage = parseFloat(token[1])
+        for (tok in tokens) {
+            let token = tokens[tok]
+            let symbol = token[0]
+            let percentage = parseFloat(token[1])
 
-        if (percentage < .005) {
-            other[1] += percentage
-        } else {
-            view.push([symbol, percentage])
+            if (percentage < .005) {
+                other[1] += percentage
+            } else {
+                view.push([symbol, percentage])
+            }
         }
-    }
 
-    if (other[1] > 0) {
-        view.push(other)
-    }
+        if (other[1] > 0) {
+            view.push(other)
+        }
 
-    createGraph(view, totalString);
-    var legend = createLegend(window.myDoughnutChart)
+        createGraph(view, totalString);
+        var legend = createLegend(window.myDoughnutChart)
 
-    var count = 0;
-    for (tok in tokens) {
-        count++;
+        var count = 0;
+        for (tok in tokens) {
+            count++;
 
-        let token = tokens[tok];
-        let symbol = token[0]
-        let percentage = parseFloat(token[1])
+            let token = tokens[tok];
+            let symbol = token[0]
+            let percentage = parseFloat(token[1])
+            let coinDict = JSON.parse(sessionStorage.coinDict)
+            let id
+            let name
+            let change
+            let price
 
-        console.log(token[3],(token[3]).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 }))
+            if (coinDict[symbol]) {
+                id = coinDict[symbol]['id']
+                name = coinDict[symbol]['name']
+                change = parseFloat(coinDict[symbol]['percent_change_24h'])
+            }
 
-        table += `<tr>
+            if (!token[3]) {
+                if (coinDict[symbol]) {
+                    price = parseFloat(coinDict[symbol]['price_usd'])
+                }
+            } else {
+                price = null
+            }
+
+
+
+            table += `<tr>
                         <td class="col-color" style="background-color: ${legend[symbol] ? legend[symbol] : legend['Other']}" ></td>
                         <th scope="row">${count}</th>
-                        <td>${symbol}</td>
+                        <td>${ id ? '<a href="https://coinmarketcap.com/currencies/' + id + '/" target="_blank">' + name + '</a>' : symbol}</td>
                         <td>${(percentage * 100).toPrecision(4) + "%"}</td>
                         ${ extendedTable ? (token[4] ? '<td>$' + (token[4] < 1 ? (token[4]).toPrecision(4) : (token[4]).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })) + '</td>' : '<td>?</td>') : ''}
-                        ${ extendedTable ? (token[2] ? '<td>' + (token[2] < 1 ? (token[2]).toPrecision(4) : token[2] < 1000 ? (token[2]).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 }) : (token[2]).toLocaleString(undefined, { maximumFractionDigits: 0, minimumFractionDigits: 0 })) + '</td>' : '<td>?</td>') : ''}
-                        ${ extendedTable ? (token[3] ? '<td>$' + (token[3] < 1 ? (token[3]).toPrecision(4) : (token[3]).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })) + '</td>' : '<td>?</td>') : ''}
+                        ${ extendedTable ? (token[2] ? '<td>' + (token[2] < 1 ? (token[2]).toPrecision(4) : token[2] < 1000 ? (token[2]).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 }) : (token[2]).toLocaleString(undefined, { maximumFractionDigits: 0, minimumFractionDigits: 0 })) + ' ' + symbol + '</td>' : '<td>?</td>') : ''}
+                        <td class="${ change ? (change < -5 ? 'table-danger' : change > 5 ? 'table-success' : '') : ''}">${price ? (price < 1 ? (price).toPrecision(4) : (price).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })) : '?'}</td>
                     </tr>`
-    }
+        }
 
-    table += `</tbody>
+        table += `</tbody>
                 </table>`
 
-    document.getElementById("output").innerHTML = table
+        document.getElementById("output").innerHTML = table
 
-
+    } else {
+        document.getElementById("output").innerHTML = "You need to add some tokens first!"
+    }
 
 }
 
@@ -952,9 +1000,10 @@ async function getRow(rowNumber) {
         var range = "A" + rowNumber + ":E" + rowNumber
 
         var sheet = await getSheetRange(range)
-        var values = sheet.values[0]
+        
 
         if (sheet.values) {
+            var values = sheet.values[0]
             if (values.length >= 2 && values.length < 6) {
                 var time = values[0]
                 var dataType = parseInt(values[1])
