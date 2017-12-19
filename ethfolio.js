@@ -663,7 +663,7 @@ function displayAllBalances(tokens, total) {
         table += `<table class="table table-striped">
                     <thead>
                         <tr>
-                            <th scope="col" class="col-color">&nbsp;</th>
+                            <th scope="col" class="col-color">&nbsp;&nbsp;</th>
                             <th scope="col"></th>
                             <th scope="col">Token</th>
                             <th scope="col">%</th>
@@ -720,7 +720,7 @@ function displayAllBalances(tokens, total) {
                     price = parseFloat(coinDict[symbol]['price_usd'])
                 }
             } else {
-                price = null
+                price = token[3]
             }
 
 
@@ -732,7 +732,7 @@ function displayAllBalances(tokens, total) {
                         <td>${(percentage * 100).toPrecision(4) + "%"}</td>
                         ${ extendedTable ? (token[4] ? '<td>$' + (token[4] < 1 ? (token[4]).toPrecision(4) : (token[4]).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })) + '</td>' : '<td>?</td>') : ''}
                         ${ extendedTable ? (token[2] ? '<td>' + (token[2] < 1 ? (token[2]).toPrecision(4) : token[2] < 1000 ? (token[2]).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 }) : (token[2]).toLocaleString(undefined, { maximumFractionDigits: 0, minimumFractionDigits: 0 })) + ' ' + symbol + '</td>' : '<td>?</td>') : ''}
-                        <td class="${ change ? (change < -5 ? 'table-danger' : change > 5 ? 'table-success' : '') : ''}">${price ? (price < 1 ? (price).toPrecision(4) : (price).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })) : '?'}</td>
+                        <td class="${ change ? (change < -5 ? 'table-danger' : change > 5 ? 'table-success' : '') : ''}">$${price ? (price < 1 ? (price).toPrecision(4) : (price).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })) : '?'}</td>
                     </tr>`
         }
 
@@ -915,7 +915,7 @@ async function submitToForm() {
 
                     var url = [location.protocol, '//', location.host, location.pathname].join('');
 
-                    var foliourl = url + "?row=" + (sheet.values.length + 1)
+                    var foliourl = url + "?r=" + (sheet.values.length + 1)
 
                     document.getElementById("shareLink").innerHTML = `<div class="alert alert-success" role="alert">Your ethfolio can be found at: <a href="${foliourl}">${foliourl}</a></div>`
 
@@ -1072,8 +1072,8 @@ window.onload = async function () {
     if (Object.keys(queryStrings).length > 0) {
         //Get data from coinmarketcap data
         sessionStorage.coinDict = await getAllTokens();
-        if ('row' in queryStrings) {
-            let row = queryStrings['row'][0]
+        if ('r' in queryStrings) {
+            let row = queryStrings['r'][0]
             if (row > 1) {
                 console.log("Getting Row " + row);
                 document.getElementById("output").innerHTML = "<h2 class='text-center'>Loading portfolio...</h2>";

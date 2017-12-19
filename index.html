@@ -81,8 +81,8 @@
                         <div class="col-md-4">
                             <h2>Share.</h2>
                             <p>Once you save your portfolio, we give you a link which you can share with your friends.</p>
-                            <p>If you chose to <b>save your total USD value</b>, we will show people how much your total portfolio is worth.</p>
-                            <p>If you chose to <b>save your addresses</b>, we will automatically update your entire portfolio as it changes.</p>
+                            <p>If you chose to <b>save token balances</b>, we can update the value of your portfolio over time.</p>
+                            <p>If you chose to <b>save wallet addresses</b>, we can update your entire portfolio over time.</p>
                         </div>
                     </div>
                     <hr class="my-4">
@@ -95,9 +95,9 @@
                             <p>Our goal is not only to make it simple to create your portfolio, but make it easy to share it too.</p>
                             <p>Take a look at these example portfolios to see what sharing looks like. Note that these all represent the same token portfolio using the different save settings.</p>
                             <ul>
-                                <li><b>Default save settings (no personal data):</b> <a href="http://ethfol.io/?row=2">http://ethfol.io/?row=2</a></li>
-                                <li><b>Save total value:</b> <a href="http://ethfol.io/?row=3">http://ethfol.io/?row=3</a></li>
-                                <li><b>Save all addresses and custom token values:</b> <a href="http://ethfol.io/?row=4">http://ethfol.io/?row=4</a></li>
+                                <li><b>Default save settings:</b> <a href="http://ethfol.io/?r=2">http://ethfol.io/?r=2</a></li>
+                                <li><b>Save token balances:</b> <a href="http://ethfol.io/?r=3">http://ethfol.io/?r=3</a></li>
+                                <li><b>Save wallet addresses:</b> <a href="http://ethfol.io/?r=4">http://ethfol.io/?r=4</a></li>
                             </ul>
                         </div>
                     </div>
@@ -116,24 +116,20 @@
                         </div>
                         <div class="col-md-9">
                             <h3>You can add any number of custom tokens.</h3>
-                            <p>Using the <a href="https://www.cryptocompare.com/">CryptoCompare</a> price API, we are able to bring you access to hundreds of tokens which you can easily add to your portfolio. You just add the <b>#</b> of tokens you own, and we will calculate the total value.</p>
-                            <p>If your token is not supported by the CryptoCompare API, you can just use the dropdown to enter a <b>$</b> value for your tokens, and we will seamlessly add it to your portfolio.</p>
+                            <p>Using the <a href="https://coinmarketcap.com/">Coinmarketcap</a> price API, we are able to bring you access to hundreds of tokens which you can easily add to your portfolio. You just add the <b>#</b> of tokens you own, and we will calculate the total value.</p>
+                            <p>If your token is not supported by the Coinmarketcap API, you can just use the dropdown to enter a <b>$</b> value for your tokens, and we will seamlessly add it to your portfolio.</p>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-3">
-                            <img src="image-4.png" class="img-responsive img-thumbnail" />
-                        </div>
-                        <div class="col-md-9">
-                            <h3>Quickly check your wallets without sharing anything.</h3>
+                        <div class="col-md-12">
+                            <h3>Bookmark your wallets without sharing anything.</h3>
                             <p>With the <code>?a=</code> query string, you can create a URL with your different ETH, BTC, and LTC addresses separated by a comma (<code>,</code>). When you visit that link, your addresses will automatically get populated in the portfolio view.</p>
-                            <p>Take a look at this example: <a style="word-wrap: break-word;" href="http://ethfol.io?a=0x7eD1E469fCb3EE19C0366D829e291451bE638E59,LSFz3wyoFcqW2TKPCcj9gao4zPPuS3wUTS,1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX">http://ethfol.io?a=0x7eD1E469fCb3EE19C0366D829e291451bE638E59,LSFz3wyoFcqW2TKPCcj9gao4zPPuS3wUTS,1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX</a></p>
+                            <p>You can use this same trick to add custom tokens aswell! Any other query string is treated as custom token. By default, the value of the query string will set the token balance, but you can set the USD amount by adding <code>$</code> to the value.</p>
+                            <p>Take a look at this example:<br /><a style="word-wrap: break-word;" href="?a=0x7eD1E469fCb3EE19C0366D829e291451bE638E59,LSFz3wyoFcqW2TKPCcj9gao4zPPuS3wUTS,1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX&BCH=100,200&XMR=$100000"><code>http://ethfol.io<br />?a=0x7eD1E469fCb3EE19C0366D829e291451bE638E59,LSFz3wyoFcqW2TKPCcj9gao4zPPuS3wUTS,1F1tAaz5x1HUXrCNLbtMDqcw6o5GNn4xqX<br />&BCH=100,200<br />&XMR=$100000</code></a></p>
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-md-3">
-                        </div>
-                        <div class="col-md-9">
+                        <div class="col-md-12">
                             <h3>Find bugs? Have suggestions? Wanna say thanks?</h3>
                             <p>I would love any and all comments and criticisms for this project. Feel free to point out issues on <a href="https://github.com/shawntabrizi/ethfolio">GitHub</a>, or send me feedback directly via <a href="mailto:shawntabrizi@gmail.com?Subject=ethfol.io%20Feedback">e-mail</a>.</p>
                             <p>If you think this project is extra cool and want to say thanks, feel free to send me some fake money at:</p>
@@ -141,7 +137,6 @@
                                 <li>ETH: <code>0xD62835Fe2B40C8411A10E7980a290270e6A23cDA</code></li>
                                 <li>BTC: <code>3QQJLmgMJdWDThvWpbvmrKH9WVJyBM9TZy</code></li>
                             </ul>
-                            <p>Look at <a href="http://ethfol.io?a=0xD62835Fe2B40C8411A10E7980a290270e6A23cDA,3QQJLmgMJdWDThvWpbvmrKH9WVJyBM9TZy">my sad portfolio</a> :(</p>
                         </div>
                     </div>
                 </div>
@@ -151,7 +146,7 @@
 
     <footer class="footer fixed-bottom">
         <div class="container">
-            <span class="text-muted"><a href=".">ethfolio</a> &copy; - Created by <a href="http://shawntabrizi.com/">Shawn Tabrizi</a> - Powered by <a href="https://ethplorer.io/">Ethplorer.io</a>, <a href="https://www.cryptocompare.com/">CryptoCompare</a>, <a href="https://blockchain.info/">Blockchain.info</a>, and <a href="https://www.blockcypher.com/">BlockCypher</a> - Using <a href="http://www.chartjs.org/">Chart.js</a> and Google <a href="https://www.google.com/forms/about/">Forms</a> + <a href="https://www.google.com/sheets/about/">Sheets</a> - Source on <a href="https://github.com/shawntabrizi/ethfolio">GitHub</a></span>
+            <span class="text-muted"><a href=".">ethfolio</a> &copy; - Created by <a href="http://shawntabrizi.com/">Shawn Tabrizi</a> - Powered by <a href="https://ethplorer.io/">Ethplorer.io</a>, <a href="https://coinmarketcap.com/">Coinmarketcap</a>, <a href="https://blockchain.info/">Blockchain.info</a>, and <a href="https://www.blockcypher.com/">BlockCypher</a> - Using <a href="http://www.chartjs.org/">Chart.js</a> and Google <a href="https://www.google.com/forms/about/">Forms</a> + <a href="https://www.google.com/sheets/about/">Sheets</a> - Source on <a href="https://github.com/shawntabrizi/ethfolio">GitHub</a></span>
         </div>
     </footer>
 
