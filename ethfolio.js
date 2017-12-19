@@ -720,7 +720,7 @@ function displayAllBalances(tokens, total) {
                     price = parseFloat(coinDict[symbol]['price_usd'])
                 }
             } else {
-                price = token[3]
+                price = parseFloat(token[3])
             }
 
 
