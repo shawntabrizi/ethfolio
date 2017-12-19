@@ -257,7 +257,7 @@ function showSubmission(showAddressSave = true) {
     saveText.setAttribute("class", "")
 
     if (showAddressSave) {
-        document.getElementById("saveAddressArea").style.display = 'unset'
+        document.getElementById("saveAddressArea").style.display = 'inline-block'
     } else {
         document.getElementById("saveAddressArea").style.display = 'none'
     }
@@ -732,7 +732,7 @@ function displayAllBalances(tokens, total) {
                         <td>${(percentage * 100).toPrecision(4) + "%"}</td>
                         ${ extendedTable ? (token[4] ? '<td>$' + (token[4] < 1 ? (token[4]).toPrecision(4) : (token[4]).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })) + '</td>' : '<td>?</td>') : ''}
                         ${ extendedTable ? (token[2] ? '<td>' + (token[2] < 1 ? (token[2]).toPrecision(4) : token[2] < 1000 ? (token[2]).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 }) : (token[2]).toLocaleString(undefined, { maximumFractionDigits: 0, minimumFractionDigits: 0 })) + ' ' + symbol + '</td>' : '<td>?</td>') : ''}
-                        <td class="${ change ? (change < -5 ? 'table-danger' : change > 5 ? 'table-success' : '') : ''}">$${price ? (price < 1 ? (price).toPrecision(4) : (price).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })) : '?'}</td>
+                        <td class="${ change ? (change < -5 ? 'table-danger' : change > 5 ? 'table-success' : '') : ''}">${price ? (price < 1 ? '$' + (price).toPrecision(4) : '$' + (price).toLocaleString(undefined, { maximumFractionDigits: 2, minimumFractionDigits: 2 })) : '?'}</td>
                     </tr>`
         }
 
@@ -988,7 +988,7 @@ async function getSheetRange(range) {
     extra = "P2tleT1BSXphU3lDSlVham9"
     extra += "XdWI0aElBdzM3dUZUaWZBMFB2emI3V2dtQ28"
 
-    var response = await fetch("https://sheets.googleapis.com/v4/spreadsheets/1EVToo4kogqGNrQ-lLgl9iXJ4759p5PCbI0HxhqCCQek/values/" + range + atob(extra + "="))
+    var response = await fetch("https://sheets.googleapis.com/v4/spreadsheets/1T-CbL4MwOSu2lt9NVps7O42dLvtKv7XGuQvQvHVGPeU/values/" + range + atob(extra + "="))
     var sheet = await response.json()
 
     return sheet
